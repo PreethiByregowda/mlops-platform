@@ -1,0 +1,10 @@
+# Allowlist: the work-pool image needs only the flow code, its locked
+# dependencies and the training data. Everything else stays out, including
+# local MLflow state, model files and anything else in the working tree.
+*
+!Pipfile
+!Pipfile.lock
+!main.py
+!stage.py
+!approve.py
+!data/

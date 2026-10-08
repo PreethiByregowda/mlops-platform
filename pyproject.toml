@@ -1,0 +1,18 @@
+[tool.black]
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+# Errors and likely bugs only; formatting is left to black/isort.
+select = ["E", "F", "W", "B"]
+ignore = ["E501"]  # line length is the formatter's job
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares request parameters as call defaults by design.
+extend-immutable-calls = ["fastapi.Body", "fastapi.Query", "fastapi.Depends"]

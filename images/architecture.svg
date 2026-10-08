@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 24 1280 340" width="1280" height="340" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <!--
+    High-level architecture of the GoEmotions MLOps pipeline.
+    Source of truth for this file and images/architecture.png;
+    see docs/README.md to regenerate the PNG.
+
+    Layout grid: node 200x76; columns x = 40, 380, 720, 1040; rows y = 60, 260.
+    The promotion gate is a 232-wide hexagon centred under MLflow.
+    Top row: model lifecycle (data -> training -> MLflow -> inference).
+    Bottom row: orchestration and the promotion gate.
+    Solid arrows: data/model flow. Dashed arrows: orchestration.
+  -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+    <style>
+      .node  { fill: #ffffff; stroke: #475569; stroke-width: 1.5; }
+      .hub   { fill: #eff6ff; stroke: #1d4ed8; stroke-width: 2; }
+      .gate  { fill: #fffbeb; stroke: #b45309; stroke-width: 1.5; }
+      .serve { fill: #f0fdf4; stroke: #15803d; stroke-width: 1.5; }
+      .title { font-size: 18px; font-weight: 600; fill: #0f172a; text-anchor: middle; }
+      .sub   { font-size: 13px; fill: #64748b; text-anchor: middle; }
+      .flow  { stroke: #64748b; stroke-width: 1.75; fill: none; marker-end: url(#arrow); }
+      .orch  { stroke: #94a3b8; stroke-width: 1.5; fill: none; stroke-dasharray: 6 5; marker-end: url(#arrow-muted); }
+      .label { font-size: 14px; fill: #475569; }
+      .mid   { text-anchor: middle; }
+      .legend { font-size: 13px; fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect y="24" width="1280" height="340" fill="#ffffff"/>
+
+  <!-- ===== Top row: lifecycle ===== -->
+  <rect class="node" x="40" y="60" width="200" height="76" rx="10"/>
+  <text class="title" x="140" y="104">GoEmotions Data</text>
+
+  <rect class="node" x="380" y="60" width="200" height="76" rx="10"/>
+  <text class="title" x="480" y="94">Model Training</text>
+  <text class="title" x="480" y="117">&amp; Evaluation</text>
+
+  <rect class="hub" x="720" y="60" width="200" height="76" rx="10"/>
+  <text class="title" x="820" y="94">MLflow</text>
+  <text class="sub" x="820" y="117">Tracking &amp; Model Registry</text>
+
+  <rect class="serve" x="1040" y="60" width="200" height="76" rx="10"/>
+  <text class="title" x="1140" y="104">FastAPI Inference</text>
+
+  <!-- ===== Bottom row: orchestration and promotion ===== -->
+  <rect class="node" x="380" y="260" width="200" height="76" rx="10"/>
+  <text class="title" x="480" y="294">Prefect + Docker</text>
+  <text class="sub" x="480" y="317">Orchestration</text>
+
+  <polygon class="gate" points="726,260 914,260 936,298 914,336 726,336 704,298"/>
+  <text class="title" x="820" y="294">Model Promotion Gate</text>
+  <text class="sub" x="820" y="317">Candidate vs. current model</text>
+
+  <!-- ===== Data / model flow ===== -->
+  <line class="flow" x1="240" y1="98" x2="376" y2="98"/>
+  <text class="label mid" x="308" y="86">training data</text>
+
+  <line class="flow" x1="580" y1="98" x2="716" y2="98"/>
+  <text class="label mid" x="648" y="86">metrics &amp; models</text>
+
+  <line class="flow" x1="920" y1="98" x2="1036" y2="98"/>
+  <text class="label mid" x="980" y="50">registered model</text>
+  <text class="label mid" x="980" y="68">@staging or</text>
+  <text class="label mid" x="980" y="86">@production</text>
+
+  <!-- MLflow -> gate: candidate runs; gate -> MLflow: alias update -->
+  <line class="flow" x1="790" y1="136" x2="790" y2="256"/>
+  <text class="label" x="778" y="202" text-anchor="end">candidate runs</text>
+
+  <line class="flow" x1="850" y1="260" x2="850" y2="140"/>
+  <text class="label" x="862" y="194">promote to</text>
+  <text class="label" x="862" y="212">@staging</text>
+
+  <!-- ===== Orchestration ===== -->
+  <line class="orch" x1="480" y1="260" x2="480" y2="140"/>
+
+  <line class="orch" x1="580" y1="298" x2="700" y2="298"/>
+
+  <!-- ===== Legend ===== -->
+  <line x1="1040" y1="282" x2="1084" y2="282" stroke="#64748b" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <text class="legend" x="1096" y="287">data &amp; model flow</text>
+  <line x1="1040" y1="314" x2="1084" y2="314" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5" marker-end="url(#arrow-muted)"/>
+  <text class="legend" x="1096" y="319">orchestration</text>
+</svg>

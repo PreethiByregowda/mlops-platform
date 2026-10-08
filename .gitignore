@@ -1,0 +1,21 @@
+# Local environment
+.env
+
+# Python / tooling caches
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Downloaded data (recreate with utils/generate_csv.py)
+data/
+
+# Local MLflow state (tracking DB, run and model artifacts)
+mlflow.db
+mlruns/
+mlartifacts/
+artifacts/
+*.pkl
+
+# OS / editor files
+.DS_Store
+.vscode/

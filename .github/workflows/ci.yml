@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  PIPENV_VERSION: "2023.12.1"
+  RUFF_VERSION: "0.6.9"  # keep in sync with the ruff pin in Pipfile [dev-packages]
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install "ruff==${RUFF_VERSION}"
+      - run: ruff check --output-format=github .
+
+  lockfiles:
+    name: Lockfiles match Pipfiles
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install "pipenv==${PIPENV_VERSION}"
+      - name: Pipeline environment
+        run: pipenv verify
+      - name: Inference environment
+        working-directory: web_service
+        run: pipenv verify
+
+  test:
+    name: Tests (${{ matrix.suite }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: pipeline
+            dir: .
+          - suite: inference
+            dir: web_service
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pipenv
+          cache-dependency-path: ${{ matrix.dir }}/Pipfile.lock
+      - run: pip install "pipenv==${PIPENV_VERSION}"
+      - name: Install locked dependencies
+        run: pipenv sync --dev
+      - run: pipenv run python -m pytest tests -q
+
+  docker:
+    name: Docker build (${{ matrix.image }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # data/ is downloaded locally and not in git, so CI checks that the
+          # image builds and its code imports, not that it can train.
+          - image: training
+            context: .
+            tag: mlops-platform:ci
+            smoke: docker run --rm mlops-platform:ci python -c "import main, stage, approve"
+          - image: inference
+            context: web_service
+            tag: emotion-model:ci
+            smoke: docker run --rm --entrypoint python emotion-model:ci -c "import app.main"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          tags: ${{ matrix.tag }}
+          load: true
+          push: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - name: Smoke test (imports inside the image)
+        run: ${{ matrix.smoke }}
